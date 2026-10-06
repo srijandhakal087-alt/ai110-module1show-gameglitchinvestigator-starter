@@ -1,76 +1,30 @@
 # AI Interactions Log
 
-> **Stretch features only.** Only fill in the sections that apply to stretch features you attempted. If you did not attempt a stretch feature, leave its section blank or delete it. This file is not required for the core project.
+## Test Generation (SF7)
+
+I used ChatGPT to help generate pytest cases for the refactored game logic in `logic_utils.py`. I reviewed the suggested tests, ran them with `pytest`, and used the results to find one remaining scoring bug.
+
+| Edge Case | Prompt Used | AI-Suggested Test | Did It Pass? | Your Reasoning |
+|-----------|-------------|-------------------|--------------|----------------|
+| Guess is higher than the secret | "Generate a pytest test for the high/low hint bug after moving `check_guess` into `logic_utils.py`." | `check_guess(60, 50)` should return `"Too High"` and `"📉 Go LOWER!"` | Yes | A guess of 60 is above the secret 50, so the game should tell the player to go lower. |
+| Guess is lower than the secret | "Generate a pytest test for the high/low hint bug after moving `check_guess` into `logic_utils.py`." | `check_guess(40, 50)` should return `"Too Low"` and `"📈 Go HIGHER!"` | Yes | A guess of 40 is below the secret 50, so the correct hint is to go higher. |
+| Wrong guess should not change score | "Generate a pytest case to verify the repaired scoring logic." | `update_score(0, "Too High", 1)` should return `0` | No at first, then Yes after the fix | The first run returned `-5`, which showed that part of the old scoring logic was still present. I changed `update_score()` so incorrect guesses leave the score unchanged, then reran pytest and verified the test passed. |
+| Correct guess on first attempt | "Generate a test for the first-attempt scoring bug." | `update_score(0, "Win", 1)` should return `100` | Yes | The original game incorrectly gave 80 points on the first try. The repaired formula should award 100 points. |
 
 ---
 
 ## Agent Workflow (SF8)
 
-> Document your experience using an AI agent (e.g., Cursor Agent, Claude, Copilot) to make multi-step changes autonomously.
-
-**What task did you give the agent?**
-
-<!-- Describe the goal you asked the agent to accomplish -->
-
-**What did the agent do?**
-
-<!-- List the steps the agent took (files edited, commands run, etc.) -->
-
-**What did you have to verify or fix manually?**
-
-<!-- Describe anything the agent got wrong or that required human review -->
-
----
-
-## Test Generation (SF7)
-
-> Document how you used AI to help generate or improve tests.
-
-| Edge Case | Prompt Used | AI-Suggested Test | Did It Pass? | Your Reasoning |
-|-----------|-------------|-------------------|--------------|----------------|
-| | | | | |
-| | | | | |
-| | | | | |
+Not attempted.
 
 ---
 
 ## Linting & Style (SF9)
 
-> Document your use of AI for linting or code style improvements.
-
-**Prompt used:**
-
-```
-<!-- Paste the prompt you gave the AI -->
-```
-
-**Linting output before:**
-
-```
-<!-- Paste relevant linter warnings/errors -->
-```
-
-**Changes applied:**
-
-<!-- Describe what you changed based on the AI's suggestions -->
+Not attempted.
 
 ---
 
 ## Model Comparison (SF11)
 
-> Compare two AI models on the same task.
-
-**Task given to both models:**
-
-<!-- Describe what you asked each model to do -->
-
-| | Model A | Model B |
-|-|---------|---------|
-| **Model name** | | |
-| **Response summary** | | |
-| **More Pythonic?** | | |
-| **Clearer explanation?** | | |
-
-**Which did you prefer and why?**
-
-<!-- Your conclusion -->
+Not attempted.

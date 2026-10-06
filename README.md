@@ -2,53 +2,100 @@
 
 ## 🚨 The Situation
 
-You asked an AI to build a simple "Number Guessing Game" using Streamlit.
-It wrote the code, ran away, and now the game is unplayable. 
-
-- You can't win.
-- The hints lie to you.
-- The secret number seems to have commitment issues.
+This project is a Streamlit number guessing game that was generated with several bugs. The player must guess a secret number within a limited number of attempts while receiving higher/lower hints. The original version had broken hint logic, inconsistent scoring, state issues, and problems restarting the game.
 
 ## 🛠️ Setup
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run the broken app: `python -m streamlit run app.py`
+1. Install dependencies:
 
-## 🕵️‍♂️ Your Mission
+```bash
+pip install -r requirements.txt
+```
 
-1. **Play the game.** Open the "Developer Debug Info" tab in the app to see the secret number. Try to win.
-2. **Find the State Bug.** Why does the secret number change every time you click "Submit"? Ask ChatGPT: *"How do I keep a variable from resetting in Streamlit when I click a button?"*
-3. **Fix the Logic.** The hints ("Higher/Lower") are wrong. Fix them.
-4. **Refactor & Test.** - Move the logic into `logic_utils.py`.
-   - Run `pytest` in your terminal.
-   - Keep fixing until all tests pass!
+2. Run the app:
 
-## 📝 Document Your Experience
+```bash
+python -m streamlit run app.py
+```
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+3. Run the automated tests:
+
+```bash
+pytest
+```
+
+## 🕵️‍♂️ Bugs Found
+
+While testing the game, I found several problems:
+
+- The higher/lower hints were sometimes backwards.
+- The secret value was being converted between an integer and a string, causing inconsistent comparison behavior.
+- Invalid guesses such as `-1` were accepted even when the valid range was 1–100.
+- The New Game button did not reset the game status, so the player could remain stuck after losing.
+- The attempt counter originally started incorrectly and the displayed attempts could become outdated after a guess.
+- A first-attempt win gave 80 points instead of 100 because of an off-by-one scoring calculation.
+- Wrong guesses could randomly increase or decrease the player's score.
+
+## 🔧 Fixes Applied
+
+I moved the reusable game logic from `app.py` into `logic_utils.py` so that the logic could be tested independently from the Streamlit UI.
+
+The main fixes included:
+
+- Corrected the higher/lower hint logic.
+- Removed the integer/string conversion that caused inconsistent comparisons.
+- Added input validation so guesses outside the selected difficulty range are rejected.
+- Updated New Game so it resets the secret number, attempts, score, status, history, and messages.
+- Corrected the scoring formula so a first-attempt win gives 100 points.
+- Removed inconsistent score changes for wrong guesses.
+- Updated Streamlit session state and rerun behavior so the attempts display stays current.
+- Added pytest tests to verify the repaired logic.
 
 ## 📸 Demo Walkthrough
 
-Describe your fixed game in numbered steps so a reader can follow along without watching a video:
+1. Start the game by running `python -m streamlit run app.py`.
+2. Select a difficulty from the sidebar. The game displays the valid number range and number of allowed attempts.
+3. Open **Developer Debug Info** to view the secret number for testing.
+4. Enter a number lower than the secret and click **Submit Guess**. The game displays **Go HIGHER!**
+5. Enter a number higher than the secret. The game displays **Go LOWER!**
+6. Enter the correct secret number. The game displays a winning message and final score.
+7. Click **New Game** to reset the secret, attempts, score, game status, and guess history.
+8. Try entering a number outside the valid range. The game rejects the input without using an attempt.
+9. Run `pytest` in the terminal to verify the game logic automatically.
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+**Screenshot (optional):**
 
-**Screenshot** *(optional)*: <!-- Insert a screenshot of your fixed, winning game here -->
+Add a screenshot here showing the fixed game after a successful guess.
 
 ## 🧪 Test Results
 
+The automated test set verifies the hint logic, correct guesses, scoring behavior, and input parsing.
+
+```text
+pytest
+================================ test session starts ================================
+platform win32 -- Python 3.13.14, pytest-9.1.1, pluggy-1.6.0
+collected 8 items
+
+tests/test_game_logic.py ........                                      [100%]
+
+================================= 8 passed =================================
 ```
-# Paste your pytest output here, e.g.:
-# pytest tests/
-# ========================= X passed in 0.XXs =========================
-```
+
+One scoring test initially failed because the game still subtracted 5 points for a wrong guess. After updating `update_score()` so wrong guesses leave the score unchanged, the test passed.
+
+## 📝 Project Files
+
+The project includes:
+
+- `app.py` — Streamlit user interface and game state management
+- `logic_utils.py` — refactored game logic
+- `tests/test_game_logic.py` — automated pytest tests
+- `reflection.md` — debugging and AI collaboration reflection
+- `ai_interactions.md` — AI-assisted test generation documentation
+- `README.md` — project overview and demo walkthrough
 
 ## 🚀 Stretch Features
 
-- [ ] [If you choose to complete Challenge 4, describe the Enhanced UI changes here — a screenshot is optional]
+- [x] AI-assisted test generation documented in `ai_interactions.md`
+- [ didnt do it] Enhanced UI changes
