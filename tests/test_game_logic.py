@@ -1,9 +1,18 @@
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(__file__)
+    )
+)
 
-from logic_utils import check_guess, update_score, parse_guess
+from logic_utils import (
+    check_guess,
+    parse_guess,
+    update_score,
+    validate_guess_range,
+)
 
 
 def test_guess_too_high():
@@ -53,9 +62,54 @@ def test_parse_valid_guess():
     assert error is None
 
 
-def test_parse_invalid_guess():
+def test_parse_non_numeric_guess():
     ok, guess, error = parse_guess("hello")
 
     assert ok is False
     assert guess is None
     assert error == "That is not a number."
+
+
+# Edge case 1: empty input
+def test_empty_guess_is_rejected():
+    ok, guess, error = parse_guess("")
+
+    assert ok is False
+    assert guess is None
+    assert error == "Enter a guess."
+
+
+# Edge case 2: negative number
+def test_negative_guess_is_out_of_range():
+    ok, guess, error = parse_guess("-1")
+
+    assert ok is True
+    assert guess == -1
+    assert error is None
+
+    range_ok, range_error = validate_guess_range(
+        guess,
+        1,
+        100,
+    )
+
+    assert range_ok is False
+    assert range_error == "Enter a number between 1 and 100."
+
+
+# Edge case 3: number above maximum
+def test_guess_above_maximum_is_out_of_range():
+    ok, guess, error = parse_guess("101")
+
+    assert ok is True
+    assert guess == 101
+    assert error is None
+
+    range_ok, range_error = validate_guess_range(
+        guess,
+        1,
+        100,
+    )
+
+    assert range_ok is False
+    assert range_error == "Enter a number between 1 and 100."

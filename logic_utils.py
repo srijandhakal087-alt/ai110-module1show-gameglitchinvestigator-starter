@@ -1,24 +1,23 @@
 def get_range_for_difficulty(difficulty: str):
-    """Return (low, high) inclusive range for a given difficulty."""
+    """Return the inclusive number range for the selected difficulty."""
     if difficulty == "Easy":
         return 1, 20
     if difficulty == "Normal":
         return 1, 100
     if difficulty == "Hard":
         return 1, 50
+
     return 1, 100
 
 
 def parse_guess(raw: str):
     """
-    Parse user input into an int guess.
+    Parse user input into an integer guess.
 
-    Returns: (ok: bool, guess_int: int | None, error_message: str | None)
+    Returns:
+        tuple: (ok, guess_int, error_message)
     """
-    if raw is None:
-        return False, None, "Enter a guess."
-
-    if raw == "":
+    if raw is None or raw == "":
         return False, None, "Enter a guess."
 
     try:
@@ -26,19 +25,33 @@ def parse_guess(raw: str):
             value = int(float(raw))
         else:
             value = int(raw)
-    except Exception:
+    except (TypeError, ValueError):
         return False, None, "That is not a number."
 
     return True, value, None
 
 
+def validate_guess_range(guess: int, low: int, high: int):
+    """
+    Check whether a parsed guess is inside the allowed game range.
+
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    if guess < low or guess > high:
+        return False, f"Enter a number between {low} and {high}."
+
+    return True, None
+
+
 # FIXME: Logic breaks here because the high/low hint logic was incorrect.
 # FIX: Refactored from app.py and corrected the hint direction with AI assistance.
-def check_guess(guess, secret):
+def check_guess(guess: int, secret: int):
     """
-    Compare guess to secret and return (outcome, message).
+    Compare a guess with the secret number.
 
-    outcome examples: "Win", "Too High", "Too Low"
+    Returns:
+        tuple: (outcome, message)
     """
     if guess == secret:
         return "Win", "🎉 Correct!"
@@ -50,9 +63,10 @@ def check_guess(guess, secret):
 
 
 # FIXME: Logic breaks here because the scoring calculation was off.
-# FIX: Corrected first-attempt scoring and removed score changes for wrong guesses.
+# FIX: Corrected first-attempt scoring and removed inconsistent score
+# changes for incorrect guesses with AI assistance.
 def update_score(current_score: int, outcome: str, attempt_number: int):
-    """Update score based on outcome and attempt number."""
+    """Return the updated score for the current guess outcome."""
     if outcome == "Win":
         points = 100 - 10 * (attempt_number - 1)
 

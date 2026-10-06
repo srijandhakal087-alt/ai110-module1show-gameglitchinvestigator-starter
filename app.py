@@ -1,14 +1,20 @@
 import random
+
 import streamlit as st
 
 from logic_utils import (
+    check_guess,
     get_range_for_difficulty,
     parse_guess,
-    check_guess,
     update_score,
+    validate_guess_range,
 )
 
-st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
+
+st.set_page_config(
+    page_title="Glitchy Guesser",
+    page_icon="🎮",
+)
 
 st.title("🎮 Game Glitch Investigator")
 st.caption("An AI-generated guessing game. Something is off.")
@@ -35,6 +41,10 @@ st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
 
+# -------------------------
+# Session state
+# -------------------------
+
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
@@ -56,6 +66,10 @@ if "last_message" not in st.session_state:
 if "last_message_type" not in st.session_state:
     st.session_state.last_message_type = None
 
+
+# -------------------------
+# Main game UI
+# -------------------------
 
 st.subheader("Make a guess")
 
@@ -89,7 +103,8 @@ with col3:
 
 
 # FIXME: Logic breaks here because New Game did not reset all game state.
-# FIX: Reset attempts, secret, score, status, history, and messages with AI assistance.
+# FIX: Reset attempts, secret, score, status, history, and messages
+# with AI assistance.
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(low, high)
@@ -98,9 +113,11 @@ if new_game:
     st.session_state.history = []
     st.session_state.last_message = None
     st.session_state.last_message_type = None
+
     st.rerun()
 
 
+# Show the most recent game message after a Streamlit rerun.
 if st.session_state.last_message:
     if st.session_state.last_message_type == "warning":
         st.warning(st.session_state.last_message)
@@ -110,6 +127,7 @@ if st.session_state.last_message:
         st.error(st.session_state.last_message)
 
 
+# Stop guesses after the game has ended.
 if st.session_state.status != "playing":
     if st.session_state.status == "won":
         st.success("You already won. Start a new game to play again.")
@@ -119,6 +137,10 @@ if st.session_state.status != "playing":
     st.stop()
 
 
+# -------------------------
+# Guess processing
+# -------------------------
+
 if submit:
     ok, guess_int, err = parse_guess(raw_guess)
 
@@ -127,53 +149,59 @@ if submit:
         st.session_state.last_message_type = "error"
         st.rerun()
 
-    elif guess_int < low or guess_int > high:
-        st.session_state.last_message = f"Enter a number between {low} and {high}."
+    range_ok, range_error = validate_guess_range(
+        guess_int,
+        low,
+        high,
+    )
+
+    if not range_ok:
+        st.session_state.last_message = range_error
         st.session_state.last_message_type = "error"
         st.rerun()
 
-    else:
-        st.session_state.attempts += 1
-        st.session_state.history.append(guess_int)
+    st.session_state.attempts += 1
+    st.session_state.history.append(guess_int)
 
-        secret = st.session_state.secret
+    secret = st.session_state.secret
 
-        # FIX: check_guess was moved into logic_utils.py and repaired.
-        outcome, message = check_guess(guess_int, secret)
+    # FIX: check_guess was moved into logic_utils.py and repaired.
+    outcome, message = check_guess(guess_int, secret)
 
-        st.session_state.score = update_score(
-            current_score=st.session_state.score,
-            outcome=outcome,
-            attempt_number=st.session_state.attempts,
+    st.session_state.score = update_score(
+        current_score=st.session_state.score,
+        outcome=outcome,
+        attempt_number=st.session_state.attempts,
+    )
+
+    if outcome == "Win":
+        st.session_state.status = "won"
+        st.session_state.last_message = (
+            f"You won! The secret was {st.session_state.secret}. "
+            f"Final score: {st.session_state.score}"
         )
+        st.session_state.last_message_type = "success"
 
-        if outcome == "Win":
-            st.session_state.status = "won"
-            st.session_state.last_message = (
-                f"You won! The secret was {st.session_state.secret}. "
-                f"Final score: {st.session_state.score}"
-            )
-            st.session_state.last_message_type = "success"
+    elif st.session_state.attempts >= attempt_limit:
+        st.session_state.status = "lost"
+        st.session_state.last_message = (
+            f"Out of attempts! "
+            f"The secret was {st.session_state.secret}. "
+            f"Score: {st.session_state.score}"
+        )
+        st.session_state.last_message_type = "error"
 
-        elif st.session_state.attempts >= attempt_limit:
-            st.session_state.status = "lost"
-            st.session_state.last_message = (
-                f"Out of attempts! "
-                f"The secret was {st.session_state.secret}. "
-                f"Score: {st.session_state.score}"
-            )
-            st.session_state.last_message_type = "error"
+    elif show_hint:
+        st.session_state.last_message = message
+        st.session_state.last_message_type = "warning"
 
-        else:
-            if show_hint:
-                st.session_state.last_message = message
-                st.session_state.last_message_type = "warning"
-            else:
-                st.session_state.last_message = None
-                st.session_state.last_message_type = None
+    else:
+        st.session_state.last_message = None
+        st.session_state.last_message_type = None
 
-        # FIX: Rerun after processing so attempts-left UI is immediately refreshed.
-        st.rerun()
+    # FIX: Rerun after each valid guess so the attempt counter
+    # immediately reflects the new session state.
+    st.rerun()
 
 
 st.divider()
